@@ -33,6 +33,10 @@ namespace VmbC
 
         Image::Image(VmbPixelFormat_t pixelFormat) noexcept
             : m_pixelFormat(pixelFormat)
+        /* 用于创建一个空的图像对象。它接受一个像素格式作为参数，并初始化图像对象的相关属性。 
+        这段代码实现了一个用于处理图像数据的 Image 类。
+        它提供了创建空图像、根据帧对象创建图像、释放图像内存和图像转换等功能。
+        这些功能对于图像处理和相机应用程序非常有用*/
         {
             m_image.Size = sizeof(m_image);
             m_image.Data = nullptr;
@@ -41,6 +45,8 @@ namespace VmbC
         Image::Image(VmbFrame_t const& frame)
             : m_dataOwned(false),
             m_pixelFormat(frame.pixelFormat)
+        /* 根据给定的帧对象创建一个图像对象。
+        它接受一个帧对象作为参数，并根据帧的像素格式、宽度和高度设置图像对象的属性。 */
         {
             m_image.Size = sizeof(m_image);
             m_image.Data = frame.imageData;
@@ -53,6 +59,8 @@ namespace VmbC
         }
 
         Image::~Image()
+        /* 释放图像对象所占用的内存。
+        如果图像对象拥有自己的数据（即 m_dataOwned 为 true），则释放图像数据的内存。 */
         {
             if (m_dataOwned)
             {
@@ -61,6 +69,9 @@ namespace VmbC
         }
 
         void Image::Convert(Image const& conversionSource)
+        /* 用于将当前图像对象转换为另一个图像对象。
+        它接受另一个图像对象作为参数，并将当前图像对象转换为与参数图像对象相同的像素格式和尺寸。
+        转换过程使用 Vimba API 提供的函数进行图像转换和重新分配内存。 */
         {
             if (&conversionSource == this)
             {

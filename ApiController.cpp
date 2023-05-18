@@ -34,6 +34,7 @@ namespace VmbC
         enum { NUM_FRAMES = 3, };
 
         ApiController::ApiController(MainWindow& mainWindow)
+        /* 一个控制器类，用于管理相机、系统和接口的列表，并提供版本信息查询功能。 */
             : m_libraryLife {}
         {
         }
@@ -43,6 +44,8 @@ namespace VmbC
 
             template<typename InfoType, typename RetrievalFunctor>
             std::vector<std::unique_ptr<ModuleDataImpl<InfoType>>> ListModulesImpl(RetrievalFunctor retrievalFunction, const char* functionName)
+            /* 函数是一个通用的模板函数，用于获取指定信息类型的模块列表。
+            它接受一个检索函数和函数名称作为参数，使用检索函数获取模块列表并进行处理，返回一个包含ModuleDataImpl对象的向量。 */
             {
                 VmbUint32_t count;
 
@@ -103,21 +106,25 @@ namespace VmbC
         };
 
         std::vector<std::unique_ptr<CameraData>> ApiController::GetCameraList()
+        /* GetCameraList()函数，返回一个包含CameraData对象的向量，用于获取相机列表。 */
         {
             return ListModules<VmbCameraInfo_t>();
         }
 
         std::vector<std::unique_ptr<TlData>> ApiController::GetSystemList()
+        /* 返回一个包含TlData对象的向量，用于获取系统列表 */
         {
             return ListModules<VmbTransportLayerInfo_t>();
         }
 
         std::vector<std::unique_ptr<InterfaceData>> ApiController::GetInterfaceList()
+        /* 返回一个包含InterfaceData对象的向量，用于获取接口列表。 */
         {
             return ListModules<VmbInterfaceInfo_t>();
         }
 
         std::string ApiController::GetVersion() const
+        /* 返回一个表示版本信息的字符串。 */
         {
             std::ostringstream os;
 

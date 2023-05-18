@@ -46,6 +46,9 @@ namespace VmbC
          * \brief Responsible for starting/stoping the acquisition, scheduling
          *        the transformation of frames received during the acquisition
          *        and transfering the results to the qt window
+         * 负责启动/停止采集、调度
+         * 采集过程中接收到的帧的变换
+         * 并将结果传输到qt窗口。
          */
         class AcquisitionManager
         {
@@ -136,7 +139,8 @@ namespace VmbC
             {
                 Frame(size_t payloadSize, size_t bufferAlignment);
                 ~Frame();
-
+            
+            //这样可以防止通过复制或移动操作对图像帧进行意外的内存管理。
                 Frame(Frame const&) = delete;
                 Frame& operator=(Frame const&) = delete;
 
