@@ -31,10 +31,15 @@
 
 ImageLabel::ImageLabel(QWidget* parent, Qt::WindowFlags flags)
     : QLabel(parent, flags)
+    /* 接受一个父窗口指针 parent 和窗口标志 flags，并通过调用 QLabel 的构造函数进行初始化。 */
 {
 }
 
+
 void ImageLabel::resizeEvent(QResizeEvent* event)
+/* 是一个重写的事件处理函数，用于处理控件的大小调整事件。
+在函数内部，它首先调用了 QLabel 的 resizeEvent 函数，以确保基类的默认行为得以执行。
+然后，通过发射 sizeChanged 信号，将调整后的大小信息作为参数发送出去，以通知其他对象或部件进行相应的处理。 */
 {
     QLabel::resizeEvent(event);
     emit sizeChanged(event->size());

@@ -21,21 +21,27 @@
 
 #include "ModuleData.h"
 
+
+/* 模块提供了一种通用的模块数据存储和访问机制，通过使用不同的访问者对象，可以对不同类型的模块信息进行处理和访问
+ */
 namespace VmbC
 {
     namespace Examples
     {
         ModuleData* ModuleData::GetParent()
+        /* 返回指向父模块数据的指针。 */
         {
             return m_parent;
         }
 
         ModuleData::ModuleData()
+        /* 构造函数，初始化 m_parent 成员变量为 nullptr。 */
             : m_parent(nullptr)
         {
         }
 
         void ModuleData::Visitor::Visit(VmbCameraInfo_t const& data)
+        /* 访问函数，用于处理 VmbCameraInfo_t 类型的数据。 */
         {
         }
 

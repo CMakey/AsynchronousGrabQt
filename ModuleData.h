@@ -38,6 +38,7 @@ namespace VmbC
         {
         public:
             struct Visitor
+            /* 访问者结构体，其中定义了纯虚函数 Visit，用于访问不同类型的数据。 */
             {
                 virtual ~Visitor() = default;
 
@@ -48,13 +49,13 @@ namespace VmbC
                 virtual void Visit(VmbTransportLayerInfo_t const& data);
             };
 
-            virtual ~ModuleData() = default;
+            virtual ~ModuleData() = default; //返回指向父模块数据的指针。
 
             ModuleData* GetParent();
 
-            virtual void Accept(Visitor& visitor) const = 0;
+            virtual void Accept(Visitor& visitor) const = 0;//纯虚函数，用于接受访问者对象。
         protected:
-            ModuleData();
+            ModuleData();//默认构造函数，初始化 m_parent 成员变量为 nullptr。
             ModuleData* m_parent;
 
         };
@@ -65,26 +66,33 @@ namespace VmbC
          */
         template<typename T>
         class ModuleDataImpl : public ModuleData
+        /* 
+        InfoType 类型是模板参数，用于指定模块信息的类型（例如 VmbCameraInfo_t 或 VmbInterfaceInfo_t）。
+         */
         {
         public:
             using InfoType = T;
 
             void Accept(Visitor& visitor) const override
+            /* 实现了基类的虚函数，用于接受访问者对象并调用 visitor.Visit 方法。 */
             {
                 visitor.Visit(m_info);
             }
 
             ModuleDataImpl(InfoType const& info)
                 : m_info(info)
+                /* 构造函数，使用传入的模块信息初始化 m_info 成员变量。 */
             {
             }
 
             InfoType const& GetInfo() const
+            /* 返回模块信息的引用。 */
             {
                 return m_info;
             }
 
             void SetParent(ModuleData* parent)
+            /* 设置父模块数据 */
             {
                 m_parent = parent;
             }
@@ -96,7 +104,7 @@ namespace VmbC
             InfoType m_info;
 
         };
-
+        //定义了别名
         using CameraData = ModuleDataImpl<VmbCameraInfo_t>;
         using InterfaceData = ModuleDataImpl<VmbInterfaceInfo_t>;
         using TlData = ModuleDataImpl<VmbTransportLayerInfo_t>;

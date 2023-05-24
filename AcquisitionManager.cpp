@@ -343,7 +343,11 @@ namespace VmbC
         namespace
         {
             void RunCommand(VmbHandle_t const camHandle, std::string const& command)
-            /* 这是一个用于执行相机命令的函数。它接受相机句柄camHandle和命令字符串command作为参数。 */
+            /*
+            brief：执行相机命令并等待其完成
+            1. 执行相机命令并等待其执行完成。它通过循环调用VmbFeatureCommandIsDone函数来检查命令的执行状态，直到命令执行完成。
+            2. 如果命令执行或完成检查失败，将抛出相应的异常。 
+             */
             {
                 auto error = VmbFeatureCommandRun(camHandle, command.c_str());
 
@@ -369,12 +373,15 @@ namespace VmbC
         }
 
         AcquisitionManager::AcquisitionLifetime::AcquisitionLifetime(VmbHandle_t const camHandle, size_t payloadSize, size_t nBufferAlignment, AcquisitionManager& acquisitionManager)
-            : m_camHandle(camHandle)
+        /* brief：实现了相机帧的获取和处理过程 */
+            : m_camHandle(camHandle)//初始化m_camHandle
         {
             m_frames.reserve(BufferCount);
+            /* 循环创建帧对象 */
             for (size_t count = BufferCount; count > 0; --count)
             {
                 auto frame = std::unique_ptr<Frame>(new Frame(payloadSize, nBufferAlignment));
+                /* 创建指定playloadSize和nBufferAlignment的Frame对象 */
                 m_frames.emplace_back(std::move(frame));
             }
 
@@ -382,22 +389,30 @@ namespace VmbC
             for (auto& frame : m_frames)
             {
                 AcquisitionContext context(&acquisitionManager);
+                /* 使用 AcquisitionContext 将 acquisitionManager 填充到帧的上下文中。 */
                 context.FillFrame(frame->m_frame);
 
                 error = VmbFrameAnnounce(camHandle, &(frame->m_frame), sizeof(frame->m_frame));
+                /* 调用 VmbFrameAnnounce 将帧通告给相机。 */
                 if (error != VmbErrorSuccess)
+                /* 调用失败，结束循环 */
                 {
                     break;
                 }
             }
 
             if (error != VmbErrorSuccess)
+            /* 如果 VmbFrameAnnounce 调用失败，调用 VmbFrameRevokeAll 撤销所有帧的通告（忽略错误）。 */
             {
                 VmbFrameRevokeAll(camHandle); // error ignored on purpose
                 throw VmbException::ForOperation(error, "VmbFrameAnnounce");
             }
 
             error = VmbCaptureStart(camHandle);
+            /* 
+            1. 调用 VmbCaptureStart 启动相机捕获。
+            2. 如果调用失败，抛出相应的异常。 
+            */
             if (error != VmbErrorSuccess)
             {
                 throw VmbException::ForOperation(error, "VmbCaptureStart");
@@ -406,6 +421,10 @@ namespace VmbC
             size_t numberEnqueued = 0;
 
             for (auto& frame : m_frames)
+            /* 
+            1. 对于每个帧对象，调用 VmbCaptureFrameQueue 将帧加入到相机的帧队列中。
+            2. 如果调用成功，递增 numberEnqueued 计数器。
+             */
             {
                 error = VmbCaptureFrameQueue(camHandle, &(frame->m_frame), &AcquisitionManager::FrameCallback);
                 if (error == VmbErrorSuccess)
@@ -415,12 +434,19 @@ namespace VmbC
             }
 
             if (numberEnqueued == 0)
+            /* 表示没有帧成功加入帧队列。 */
             {
                 VmbCaptureEnd(camHandle);
                 throw VmbException("Non of the frames could be enqueued using VmbCaptureFrameQueue", error);
             }
 
             try
+            /* 
+            执行 AcquisitionStart 命令：
+            1. 调用 RunCommand 执行 AcquisitionStart 命令。
+            2. 如果执行失败，调用 VmbCaptureEnd 结束相机捕获。
+            3. 抛出相应的异常。 
+            */
             {
                 RunCommand(camHandle, "AcquisitionStart");
             }
@@ -432,6 +458,7 @@ namespace VmbC
         }
 
         AcquisitionManager::AcquisitionLifetime::~AcquisitionLifetime()
+        /* 出现异常时进行相应的清理 */
         {
             try
             {
@@ -447,24 +474,41 @@ namespace VmbC
         }
 
         AcquisitionManager::Frame::Frame(size_t payloadSize, size_t bufferAlignment)
+        /* 
+        分配帧缓冲区的内存。
+         */
         {
             if (payloadSize > (std::numeric_limits<VmbUint32_t>::max)())
             {
                 throw VmbException("payload size outside of allowed range");
             }
 #ifdef _WIN32
+            /* 如果是 Windows 操作系统（_WIN32 宏定义已设置）：
+            使用 _aligned_malloc 函数分配对齐的内存块，大小为 payloadSize，对齐值为 bufferAlignment。
+            */
             m_frame.buffer = (unsigned char*)_aligned_malloc(payloadSize,bufferAlignment);
 #else
+            /*  如果是其他操作系统：
+            使用 aligned_alloc 函数分配对齐的内存块，大小为 payloadSize，对齐值为 bufferAlignment。 
+            */
             m_frame.buffer = (unsigned char*)aligned_alloc(bufferAlignment, payloadSize);
 #endif
+            /* 检查内存分配是否成功：
+            1. 如果分配的内存块指针为 nullptr，抛出异常，表示无法为帧分配内存，错误代码为 VmbErrorResources。
+            2. 否则，将分配的内存块指针赋值给帧对象的 m_frame.buffer 成员。 */
             if (m_frame.buffer == nullptr)
             {
                 throw VmbException("Unable to allocate memory for frame", VmbErrorResources);
             }
+            /* 设置帧缓冲区的大小：
+            将 payloadSize 转换为 VmbUint32_t 类型，并赋值给帧对象的 m_frame.bufferSize 成员。 */
             m_frame.bufferSize = static_cast<VmbUint32_t>(payloadSize);
         }
 
         AcquisitionManager::Frame::~Frame()
+        /*释放帧缓冲区的内存 
+        a. 如果是 Windows 操作系统（_WIN32 宏定义已设置），使用 _aligned_free 函数释放内存块。
+        b. 如果是其他操作系统，使用 std::free 函数释放内存块。 */
         {
 #ifdef _WIN32
             _aligned_free(m_frame.buffer);

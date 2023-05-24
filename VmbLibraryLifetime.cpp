@@ -28,6 +28,8 @@ namespace VmbC
     {
 
         VmbLibraryLifetime::VmbLibraryLifetime()
+        /* 该构造函数用于初始化 VmbC 库。它调用 VmbStartup 函数，并将返回的错误码进行判断，
+        如果不是 VmbErrorSuccess，则抛出一个 VmbException 异常，异常的错误信息包含了操作名称和错误码。 */
         {
             VmbError_t startupError = VmbStartup(nullptr);
             if (startupError != VmbErrorSuccess)

@@ -37,6 +37,7 @@ namespace VmbC
     {
 
         class ModuleTreeModel : public QAbstractItemModel
+        /* 用于实现树形数据模型。 */
         {
         public:
             ModuleTreeModel(std::vector<std::unique_ptr<ModuleData>>&& moduleData);

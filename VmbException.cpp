@@ -23,6 +23,7 @@
 
 #include "VmbException.h"
 
+/* brief：可以在异常情况下创建和处理 VmbException 对象，并获取相关的错误代码和错误信息。 */
 namespace VmbC
 {
     namespace Examples
@@ -31,11 +32,16 @@ namespace VmbC
         VmbException::VmbException(std::string const& message, VmbError_t exitCode)
             : m_exitCode(exitCode),
             m_errorMessage(message)
+            /* 接受一个 std::string 类型的 message 和一个 VmbError_t 类型的 exitCode 参数，
+            用于初始化 VmbException 对象的成员变量。
+            构造函数会断言 exitCode 不等于 VmbErrorSuccess。 */
         {
             assert(exitCode != VmbErrorSuccess);
         }
 
         VmbException VmbException::ForOperation(VmbError_t exitCode, std::string const& operation)
+        /* 接受一个 VmbError_t 类型的 exitCode 参数和一个 std::string 类型的 operation 参数，用于创建并返回一个 VmbException 对象。
+        该函数会将 operation 和 exitCode 拼接成错误信息字符串，并用它来初始化 VmbException 对象的成员变量。 */
         {
             return VmbException(operation + " call unsuccessful; exit code " + std::to_string(exitCode), exitCode);
         }
